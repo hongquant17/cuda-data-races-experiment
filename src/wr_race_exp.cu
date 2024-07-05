@@ -39,12 +39,12 @@ __global__ void dataRaceKernelSameWarp(T *data, T *buffer, curandState *randStat
 
     if (idx == thread1)
     {
-        // artificialDelay(&randStates[idx], 100, 200);
+        artificialDelay(&randStates[idx], 100, 200);
         data[0] = idx;
     }
     else if (idx == thread2)
     {
-        // artificialDelay(&randStates[idx], 100, 200);
+        artificialDelay(&randStates[idx], 100, 200);
         buffer[0] = data[0];
     }
 }
@@ -292,11 +292,11 @@ void experiment4()
     h_data = static_cast<T>(-1);
     cudaMemcpy(d_data, &h_data, sizeof(T), cudaMemcpyHostToDevice);
 
-    initCurandStates<<<20, THREADS_PER_BLOCK>>>(d_randStates, time(0));
+    int numBlocks = 16;
+    initCurandStates<<<numBlocks, THREADS_PER_BLOCK>>>(d_randStates, time(0));
     cudaDeviceSynchronize();
 
     printf("Experiment 4 (Different SM): ");
-    int numBlocks = 16;
 
     dataRaceKernelSameWarp<<<numBlocks, THREADS_PER_BLOCK>>>(d_data, d_buffer, d_randStates, 2, 1030);
     cudaDeviceSynchronize();
@@ -410,27 +410,27 @@ int main(int argc, char **argv)
     }
 
     {
-        experiment3<float>();
+        // experiment3<float>();
 
-        experiment3<double>();
+        // experiment3<double>();
 
-        experiment3<int8_t>();
+        // experiment3<int8_t>();
 
-        experiment3<int16_t>();
+        // experiment3<int16_t>();
 
-        experiment3<int32_t>();
+        // experiment3<int32_t>();
 
-        experiment3<int64_t>();
+        // experiment3<int64_t>();
 
-        experiment3<u_int8_t>();
+        // experiment3<u_int8_t>();
 
-        experiment3<u_int16_t>();
+        // experiment3<u_int16_t>();
 
-        experiment3<u_int32_t>();
+        // experiment3<u_int32_t>();
 
-        experiment3<u_int64_t>();
+        // experiment3<u_int64_t>();
 
-        experiment3<__half>();
+        // experiment3<__half>();
     }
 
     {

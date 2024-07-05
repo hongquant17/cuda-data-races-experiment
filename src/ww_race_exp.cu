@@ -65,10 +65,10 @@ template <typename T>
 __global__ void dataRaceKernelSameWarp(T *data, curandState *randStates)
 {
     int idx = threadIdx.x;
-    if (idx < 3 && idx > 0)
+    if (idx < 5 && idx > 1)
     {
-        // artificialDelay(&randStates[idx], 100, 200);
-        data[0] = idx;
+        artificialDelay(&randStates[idx], 100, 200);
+        data[0] = static_cast<T>(idx);
     }
 }
 
@@ -84,10 +84,11 @@ void experiment1()
 
     curandState *d_randStates;
     cudaMalloc((void **)&d_randStates, THREADS_PER_BLOCK * sizeof(curandState));
-    // initCurandStates<<<1, THREADS_PER_BLOCK>>>(d_randStates, time(0));
-    // cudaDeviceSynchronize();
+    initCurandStates<<<1, THREADS_PER_BLOCK>>>(d_randStates, time(0));
+    cudaDeviceSynchronize();
 
     dataRaceKernelSameWarp<<<1, THREADS_PER_BLOCK>>>(d_data, d_randStates);
+    cudaDeviceSynchronize();
     cudaMemcpy(&h_data, d_data, sizeof(T), cudaMemcpyDeviceToHost);
 
 
@@ -105,8 +106,8 @@ __global__ void dataRaceKernelDifferentWarpSameBlock(T *data, curandState *randS
 
     if (idx == 2 || idx == 60)
     {
-        // artificialDelay(&randStates[idx], 100, 200);
-        data[0] = idx;
+        artificialDelay(&randStates[idx], 100, 200);
+        data[0] = static_cast<T>(idx);
     }
 }
 
@@ -122,10 +123,11 @@ void experiment2()
 
     curandState *d_randStates;
     cudaMalloc((void **)&d_randStates, THREADS_PER_BLOCK * sizeof(curandState));
-    // initCurandStates<<<1, THREADS_PER_BLOCK>>>(d_randStates, time(0));
-    // cudaDeviceSynchronize();
+    initCurandStates<<<1, THREADS_PER_BLOCK>>>(d_randStates, time(0));
+    cudaDeviceSynchronize();
 
     dataRaceKernelDifferentWarpSameBlock<<<1, THREADS_PER_BLOCK>>>(d_data, d_randStates);
+    cudaDeviceSynchronize();
     cudaMemcpy(&h_data, d_data, sizeof(T), cudaMemcpyDeviceToHost);
     printf("Experiment 2 (Different Warp Same Block): ");
     printVal(h_data);
@@ -182,11 +184,11 @@ __global__ void dataRaceKernelDifferentSMs(T *data, curandState *randStates)
 {
     int idx = threadIdx.x;
     // int smid = getSMID();
-    if (idx == 0 && (blockIdx.x == 0 || blockIdx.x == (gridDim.x - 1)))
+    if (idx == 1 && (blockIdx.x == 0 || blockIdx.x == (gridDim.x - 1)))
     {
         // printf("Block [%d] is on SM %d\n", blockIdx.x, smid);
-        // artificialDelay(&randStates[idx], 100, 200);
-        data[0] = blockIdx.x;
+        artificialDelay(&randStates[idx], 100, 200);
+        data[0] = static_cast<T>(blockIdx.x);
     }
 }
 
@@ -204,11 +206,12 @@ void experiment4()
 
     curandState *d_randStates;
     cudaMalloc((void **)&d_randStates, THREADS_PER_BLOCK * sizeof(curandState));
-    // initCurandStates<<<numBlocks, THREADS_PER_BLOCK>>>(d_randStates, time(0));
-    // cudaDeviceSynchronize();
+    initCurandStates<<<numBlocks, THREADS_PER_BLOCK>>>(d_randStates, time(0));
+    cudaDeviceSynchronize();
 
 
     dataRaceKernelDifferentSMs<<<numBlocks, THREADS_PER_BLOCK>>>(d_data, d_randStates);
+    cudaDeviceSynchronize();
     cudaMemcpy(&h_data, d_data, sizeof(T), cudaMemcpyDeviceToHost);
     printf("Experiment 4 (Different SMs): ");
     printVal(h_data);
@@ -224,142 +227,98 @@ int main(int argc, char **argv)
 
     {
         experiment1<float>();
-        cudaDeviceSynchronize();
 
         experiment1<double>();
-        cudaDeviceSynchronize();
 
         experiment1<int8_t>();
-        cudaDeviceSynchronize();
 
         experiment1<int16_t>();
-        cudaDeviceSynchronize();
 
         experiment1<int32_t>();
-        cudaDeviceSynchronize();
 
         experiment1<int64_t>();
-        cudaDeviceSynchronize();
 
         experiment1<u_int8_t>();
-        cudaDeviceSynchronize();
 
         experiment1<u_int16_t>();
-        cudaDeviceSynchronize();
 
         experiment1<u_int32_t>();
-        cudaDeviceSynchronize();
 
         experiment1<u_int64_t>();
-        cudaDeviceSynchronize();
 
         experiment1<__half>();
-        cudaDeviceSynchronize();
     }
 
     {
         experiment2<float>();
-        cudaDeviceSynchronize();
 
         experiment2<double>();
-        cudaDeviceSynchronize();
 
         experiment2<int8_t>();
-        cudaDeviceSynchronize();
 
         experiment2<int16_t>();
-        cudaDeviceSynchronize();
 
         experiment2<int32_t>();
-        cudaDeviceSynchronize();
 
         experiment2<int64_t>();
-        cudaDeviceSynchronize();
 
         experiment2<u_int8_t>();
-        cudaDeviceSynchronize();
 
         experiment2<u_int16_t>();
-        cudaDeviceSynchronize();
 
         experiment2<u_int32_t>();
-        cudaDeviceSynchronize();
 
         experiment2<u_int64_t>();
-        cudaDeviceSynchronize();
 
         experiment2<__half>();
-        cudaDeviceSynchronize();
     }
 
     {
         // experiment3<float>();
-        // cudaDeviceSynchronize();
 
         // experiment3<double>();
-        // cudaDeviceSynchronize();
 
         // experiment3<int8_t>();
-        // cudaDeviceSynchronize();
 
         // experiment3<int16_t>();
-        // cudaDeviceSynchronize();
 
         // experiment3<int32_t>();
-        // cudaDeviceSynchronize();
 
         // experiment3<int64_t>();
-        // cudaDeviceSynchronize();
 
         // experiment3<u_int8_t>();
-        // cudaDeviceSynchronize();
 
         // experiment3<u_int16_t>();
-        // cudaDeviceSynchronize();
 
         // experiment3<u_int32_t>();
-        // cudaDeviceSynchronize();
 
         // experiment3<u_int64_t>();
-        // cudaDeviceSynchronize();
 
         // experiment3<__half>();
-        // cudaDeviceSynchronize();
     }
 
     {
         experiment4<float>();
-        cudaDeviceSynchronize();
 
         experiment4<double>();
-        cudaDeviceSynchronize();
 
         experiment4<int8_t>();
-        cudaDeviceSynchronize();
 
         experiment4<int16_t>();
-        cudaDeviceSynchronize();
 
         experiment4<int32_t>();
-        cudaDeviceSynchronize();
 
         experiment4<int64_t>();
-        cudaDeviceSynchronize();
 
         experiment4<u_int8_t>();
-        cudaDeviceSynchronize();
 
         experiment4<u_int16_t>();
-        cudaDeviceSynchronize();
 
         experiment4<u_int32_t>();
-        cudaDeviceSynchronize();
 
         experiment4<u_int64_t>();
-        cudaDeviceSynchronize();
 
         experiment4<__half>();
-        cudaDeviceSynchronize();
     }
 
     return 0;

@@ -3,7 +3,7 @@
 #include <curand_kernel.h>
 #include <cuda_fp16.h>
 
-#define THREADS_PER_BLOCK 64
+#define THREADS_PER_BLOCK 1024
 
 __device__ int getSMID()
 {
@@ -186,7 +186,7 @@ void experiment3()
     cudaMemcpy(d_data, &h_data, sizeof(T), cudaMemcpyHostToDevice);
 
     printf("Experiment 3 (Different Block Same SM): ");
-    dataRaceKernelSameWarp<<<21, THREADS_PER_BLOCK>>>(d_data, d_buffer, 2, 1288);
+    dataRaceKernelSameWarp<<<21, THREADS_PER_BLOCK>>>(d_data, d_buffer, 2, 2048);
     cudaDeviceSynchronize();
 
     cudaMemcpy(&h_data, d_buffer, sizeof(T), cudaMemcpyDeviceToHost);
@@ -258,7 +258,7 @@ void experiment4()
     printf("Experiment 4 (Different SM): ");
     int numBlocks = 16;
 
-    dataRaceKernelSameWarp<<<numBlocks, THREADS_PER_BLOCK>>>(d_data, d_buffer, 2, 65);
+    dataRaceKernelSameWarp<<<numBlocks, THREADS_PER_BLOCK>>>(d_data, d_buffer, 2, 10240);
     cudaDeviceSynchronize();
 
     cudaMemcpy(&h_data, d_buffer, sizeof(T), cudaMemcpyDeviceToHost);
